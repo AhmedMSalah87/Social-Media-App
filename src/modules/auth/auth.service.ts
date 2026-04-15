@@ -4,6 +4,8 @@ import { AppError } from "../../errors/error";
 import { compareValue, hashValue } from "../../common/utils/hash";
 import { signToken } from "../../common/utils/signToken";
 import UserRepository from "../../database/repositories/user.repository";
+import { sendEmailVerification } from "../../common/utils/email/sendEmail";
+import { generateOTP } from "../../common/utils/generateOTP";
 
 class AuthService {
   constructor(
@@ -24,6 +26,9 @@ class AuthService {
       password: hashedPassword,
       gender,
     });
+
+    const otp = generateOTP();
+    await sendEmailVerification(email, otp);
 
     res.status(201).json({
       message: "user created successfully",

@@ -1,10 +1,4 @@
-import {
-  HydratedDocument,
-  InferSchemaType,
-  Schema,
-  model,
-  models,
-} from "mongoose";
+import { InferSchemaType, Schema, model, models } from "mongoose";
 import { Gender, Provider, Role } from "../../common/enum/user.enum";
 
 const userSchema = new Schema(

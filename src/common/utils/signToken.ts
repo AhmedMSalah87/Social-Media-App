@@ -1,11 +1,12 @@
 import jwt, { Secret, SignOptions } from "jsonwebtoken";
 import { randomUUID } from "node:crypto";
-import { UserDoc } from "../../database/models/user.model";
-import { Types } from "mongoose";
+
+import { HydratedDocument } from "mongoose";
+import { User } from "../../database/models/user.model";
 
 const tokenId = randomUUID();
 
-export const signToken = (user: UserDoc) => {
+export const signToken = (user: HydratedDocument<User>) => {
   const ACCESS_SECRET_KEY: Secret = process.env.ACCESS_SECRET_KEY!;
   const REFRESH_SECRET_KEY: Secret = process.env.REFRESH_SECRET_KEY!;
   const accessOptions: SignOptions = { expiresIn: "15m", jwtid: tokenId };
