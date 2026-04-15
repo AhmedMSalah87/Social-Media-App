@@ -1,10 +1,12 @@
 import { NextFunction, Request, Response } from "express";
 import { getToken } from "../common/utils/getToken";
 import { AppError } from "../errors/error";
-import UserModel from "../database/models/user.model";
 import { verifyToken } from "../common/utils/verifyToken";
+import UserRepository from "../database/repositories/user.repository";
 
-export const authenticate = (
+const userRepo = new UserRepository();
+
+export const authenticate = async (
   req: Request,
   res: Response,
   next: NextFunction,
@@ -16,9 +18,13 @@ export const authenticate = (
 
   const decoded = verifyToken(token);
 
-  const user = UserModel.findById(decoded.id);
+  const user = await userRepo.findById(decoded.id, { password: 0 });
 
-  // req.user = user;
+  if (!user) {
+    throw new AppError("user not found", 404);
+  }
+
+  req.user = user;
 
   next();
 };
