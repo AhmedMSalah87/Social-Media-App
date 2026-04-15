@@ -1,7 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { getToken } from "../common/utils/getToken";
 import { AppError } from "../errors/error";
-import jwt from "jsonwebtoken";
 import UserModel from "../database/models/user.model";
 import { verifyToken } from "../common/utils/verifyToken";
 
