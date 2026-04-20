@@ -6,11 +6,15 @@ import { signToken } from "../../common/utils/signToken";
 import UserRepository from "../../database/repositories/user.repository";
 import { sendEmailVerification } from "../../common/utils/email/sendEmail";
 import { generateOTP } from "../../common/utils/generateOTP";
+import { eventEmitter } from "../../common/utils/email/emailEvents";
+import { UserEvents } from "../../common/enum/user.enum";
+import redisService from "../../common/services/redis.service";
+import { OTPKeys } from "../../common/utils/otpKeys";
 
 class AuthService {
-  constructor(
-    private readonly userRepo: UserRepository = new UserRepository(),
-  ) {}
+  private readonly userRepo: UserRepository = new UserRepository();
+  private readonly redisRepo = redisService;
+  constructor() {}
 
   signup = async (req: Request, res: Response, next: NextFunction) => {
     const { firstName, lastName, email, password, gender }: CreateUserDTO =
@@ -28,7 +32,11 @@ class AuthService {
     });
 
     const otp = generateOTP();
-    await sendEmailVerification(email, otp);
+    const hashedOtp = await hashValue(otp);
+    eventEmitter.emit(UserEvents.confirmEmail, async () => {
+      await this.redisRepo.setCache(OTPKeys.otp(email), hashedOtp, 600);
+      await sendEmailVerification(email, otp);
+    });
 
     res.status(201).json({
       message: "user created successfully",

@@ -12,3 +12,8 @@ export enum Role {
   user = "user",
   admin = "admin",
 }
+
+export enum UserEvents {
+  confirmEmail = "confirmEmail",
+  forgetPassword = "forgetPassword",
+}
