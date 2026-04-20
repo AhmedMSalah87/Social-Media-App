@@ -35,7 +35,7 @@ class RedisService {
     }
   }
 
-  async getCache(key: string) {
+  async getCache(key: string): Promise<string | null> {
     try {
       const value = await this.redisClient.get(key);
       if (!value) return null;
@@ -59,7 +59,7 @@ class RedisService {
     }
   }
 
-  async cacheTTL(key: string) {
+  async cacheTTL(key: string): Promise<number> {
     try {
       const ttl = await this.redisClient.ttl(key);
       return ttl;

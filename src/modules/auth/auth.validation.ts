@@ -14,3 +14,10 @@ export const signupSchema = {
 export const signinSchema = {
   body: signupSchema.body.pick({ email: true, password: true }),
 };
+
+export const verifyEmailSchema = {
+  body: z.object({
+    otp: z.string().length(6),
+    email: z.email(),
+  }),
+};

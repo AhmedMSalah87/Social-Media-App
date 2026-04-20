@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { CreateUserDTO, SignInDTO } from "./auth.dto";
+import { CreateUserDTO, SignInDTO, VerifyEmailDTO } from "./auth.dto";
 import { AppError } from "../../errors/error";
 import { compareValue, hashValue } from "../../common/utils/hash";
 import { signToken } from "../../common/utils/signToken";
@@ -7,7 +7,7 @@ import UserRepository from "../../database/repositories/user.repository";
 import { sendEmailVerification } from "../../common/utils/email/sendEmail";
 import { generateOTP } from "../../common/utils/generateOTP";
 import { eventEmitter } from "../../common/utils/email/emailEvents";
-import { UserEvents } from "../../common/enum/user.enum";
+import { Provider, UserEvents } from "../../common/enum/user.enum";
 import redisService from "../../common/services/redis.service";
 import { OTPKeys } from "../../common/utils/otpKeys";
 
@@ -31,16 +31,37 @@ class AuthService {
       gender,
     });
 
-    const otp = generateOTP();
-    const hashedOtp = await hashValue(otp);
-    eventEmitter.emit(UserEvents.confirmEmail, async () => {
-      await this.redisRepo.setCache(OTPKeys.otp(email), hashedOtp, 600);
-      await sendEmailVerification(email, otp);
-    });
+    eventEmitter.emit(UserEvents.confirmEmail, email);
 
     res.status(201).json({
-      message: "user created successfully",
+      message: "user created successfully. OTP sent to your email",
     });
+  };
+
+  verifyEmail = async (req: Request, res: Response, next: NextFunction) => {
+    const { email, otp }: VerifyEmailDTO = req.body;
+    const user = await this.userRepo.findOne({ email });
+    if (!user) {
+      throw new AppError("user not found", 404);
+    }
+    const hashedOTP = await this.redisRepo.getCache(OTPKeys.otp(email));
+
+    if (!hashedOTP) {
+      throw new AppError("OTP has expired", 401);
+    }
+
+    const isMatched = await compareValue(otp, hashedOTP);
+
+    if (!isMatched) {
+      throw new AppError("Invalid OTP", 400);
+    }
+
+    user.isVerified = true;
+    await user.save();
+
+    await this.redisRepo.deleteCache(OTPKeys.otp(email));
+
+    res.status(200).json({ message: "email verified successfully" });
   };
 
   signin = async (req: Request, res: Response, next: NextFunction) => {
