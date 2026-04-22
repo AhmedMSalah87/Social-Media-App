@@ -2,12 +2,12 @@ import { Request, Response, NextFunction } from "express";
 import { CreateUserDTO, SignInDTO, VerifyEmailDTO } from "./auth.dto";
 import { AppError } from "../../errors/error";
 import { compareValue, hashValue } from "../../common/utils/hash";
-import { signToken } from "../../common/utils/signToken";
 import UserRepository from "../../database/repositories/user.repository";
 import { eventEmitter } from "../../common/utils/email/emailEvents";
 import { UserEvents } from "../../common/enum/user.enum";
 import redisService from "../../common/services/redis.service";
 import { OTPKeys } from "../../common/utils/otpKeys";
+import tokenService from "../../common/services/token.service";
 
 class AuthService {
   private readonly userRepo: UserRepository = new UserRepository();
@@ -72,7 +72,7 @@ class AuthService {
     if (!isMatched) {
       throw new AppError("invalid password", 400);
     }
-    const { accessToken, refreshToken } = signToken(user);
+    const { accessToken, refreshToken } = tokenService.signToken(user);
     res.status(200).json({
       message: "user logged in successfully",
       accessToken,
