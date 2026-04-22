@@ -4,10 +4,8 @@ import { AppError } from "../../errors/error";
 import { compareValue, hashValue } from "../../common/utils/hash";
 import { signToken } from "../../common/utils/signToken";
 import UserRepository from "../../database/repositories/user.repository";
-import { sendEmailVerification } from "../../common/utils/email/sendEmail";
-import { generateOTP } from "../../common/utils/generateOTP";
 import { eventEmitter } from "../../common/utils/email/emailEvents";
-import { Provider, UserEvents } from "../../common/enum/user.enum";
+import { UserEvents } from "../../common/enum/user.enum";
 import redisService from "../../common/services/redis.service";
 import { OTPKeys } from "../../common/utils/otpKeys";
 
