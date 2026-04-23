@@ -61,6 +61,20 @@ abstract class BaseRepository<T> {
   ): Promise<HydratedDocument<T> | null> {
     return this.model.findByIdAndDelete(id, options).exec();
   }
+
+  async findOneAndUpdate(
+    filter: QueryFilter<T>,
+    update: UpdateQuery<T>,
+    options?: QueryOptions<T>,
+  ): Promise<HydratedDocument<T> | null> {
+    return this.model
+      .findOneAndUpdate(filter, update, {
+        returnDocument: "after",
+        runValidators: true,
+        ...options,
+      })
+      .exec();
+  }
 }
 
 export default BaseRepository;

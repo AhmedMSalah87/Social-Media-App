@@ -7,4 +7,6 @@ export class OTPKeys {
   static verifyAttempts = (email: string) =>
     `${this.otpPrefix}:${email}:verify_attempts`;
   static block = (email: string) => `${this.otpPrefix}:${email}:blocked`;
+  static forgotPassword = (email: string) =>
+    `${this.otpPrefix}:${email}:forgetPassword`;
 }

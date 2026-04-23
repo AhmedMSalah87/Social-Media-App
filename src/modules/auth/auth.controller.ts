@@ -15,5 +15,6 @@ authRouter.post(
   authService.verifyEmail,
 );
 authRouter.post("/signin", validate(signinSchema), authService.signin);
+authRouter.post("/google", authService.signWithGoogle);
 
 export default authRouter;

@@ -6,9 +6,9 @@ import { randomUUID } from "node:crypto";
 import { HydratedDocument } from "mongoose";
 import { User } from "../../database/models/user.model";
 
-// type AuthPayload = JwtPayload & {
-//   id: Types.ObjectId;
-// };
+interface AuthPayload extends JwtPayload {
+  id: Types.ObjectId;
+}
 
 class TokenService {
   constructor() {}
@@ -34,7 +34,7 @@ class TokenService {
     if (typeof decoded === "string") {
       throw new Error("Invalid token");
     }
-    return decoded as JwtPayload;
+    return decoded as AuthPayload;
   };
 
   signToken = (user: HydratedDocument<User>) => {

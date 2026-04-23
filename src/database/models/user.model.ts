@@ -18,11 +18,16 @@ const userSchema = new Schema(
     },
     password: {
       type: String,
-      required: true,
+      required: function () {
+        return this.provider === Provider.credentials;
+      },
     },
     gender: {
       type: String,
       enum: Object.values(Gender),
+      required: function () {
+        return this.provided === Provider.credentials;
+      },
     },
     provider: {
       type: String,
@@ -37,6 +42,12 @@ const userSchema = new Schema(
     isVerified: {
       type: Boolean,
       default: false,
+    },
+    googleId: {
+      type: String,
+      required: function () {
+        this.provider === Provider.google;
+      },
     },
   },
   { timestamps: true },

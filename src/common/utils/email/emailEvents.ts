@@ -15,6 +15,9 @@ eventEmitter.on(UserEvents.confirmEmail, async (email: string) => {
   await sendEmailVerification(email, otp);
 });
 
-eventEmitter.on(UserEvents.forgetPassword, async (fn) => {
-  await fn();
+eventEmitter.on(UserEvents.forgetPassword, async (email: string) => {
+  const otp = generateOTP();
+  const hashedOTP = await hashValue(otp);
+  await redisService.setCache(`otp:${email}:forgetPassword`, hashedOTP, 600);
+  await sendEmailVerification(email, otp);
 });
