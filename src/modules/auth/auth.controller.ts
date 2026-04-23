@@ -16,5 +16,8 @@ authRouter.post(
 );
 authRouter.post("/signin", validate(signinSchema), authService.signin);
 authRouter.post("/google", authService.signWithGoogle);
+authRouter.post("/password/forgot", authService.forgetPassword);
+authRouter.post("/password/verify", authService.verifyForgotPassword);
+authRouter.patch("/password/reset", authService.resetPassword);
 
 export default authRouter;
