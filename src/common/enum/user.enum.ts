@@ -16,4 +16,5 @@ export enum Role {
 export enum UserEvents {
   confirmEmail = "confirmEmail",
   forgetPassword = "forgetPassword",
+  resendOTP = "resendOTP",
 }

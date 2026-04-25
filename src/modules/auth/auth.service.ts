@@ -93,8 +93,8 @@ class AuthService {
       throw new AppError("invalid google account", 400);
     }
     // to fix undefined error from typescript
-    const firstName = given_name || "";
-    const lastName = family_name || "";
+    const firstName = given_name ?? "";
+    const lastName = family_name ?? "";
     let isNewUser = false;
 
     let user = await this.userRepo.findByEmail(email);
@@ -188,6 +188,48 @@ class AuthService {
     await redisService.deleteCache(OTPKeys.forgotPassword(email));
 
     res.status(200).json({ message: "password has reset successfully" });
+  };
+
+  resendOTP = async (req: Request, res: Response, next: NextFunction) => {
+    const { email } = req.body;
+    const user = await this.userRepo.findOne({
+      email,
+      isVerified: false,
+      provider: Provider.credentials,
+    });
+    if (!user) {
+      throw new AppError("user not found", 404);
+    }
+    const isBlocked = await this.redisRepo.getCache(OTPKeys.block(email));
+    if (isBlocked) {
+      throw new AppError(
+        "you are blocked. Please wait for 30 minutes to resend new OTP",
+        401,
+      );
+    }
+    const cooldownTTL = await this.redisRepo.cacheTTL(OTPKeys.cooldown(email));
+    if (cooldownTTL > 0) {
+      throw new AppError(`Resend after ${cooldownTTL} seconds`, 401);
+    }
+    const attempts = await this.redisRepo.increment(
+      OTPKeys.resendAttempts(email),
+    );
+    if (attempts > 5) {
+      Promise.all([
+        this.redisRepo.setCache(OTPKeys.block(email), 1, 1800),
+        this.redisRepo.deleteCache(
+          OTPKeys.resendAttempts(email),
+          OTPKeys.cooldown(email),
+        ),
+      ]);
+
+      throw new AppError(
+        "you exceeded 5 attempts of sending OTP. Please wait for 30 minutes to resend new OTP",
+        401,
+      );
+    }
+    eventEmitter.emit(UserEvents.resendOTP, email);
+    res.status(200).json({ message: "otp send to your email" });
   };
 }
 

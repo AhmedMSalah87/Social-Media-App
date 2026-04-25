@@ -13,6 +13,7 @@ eventEmitter.on(UserEvents.confirmEmail, async (email: string) => {
   const hashedOtp = await hashValue(otp);
   Promise.all([
     redisService.setCache(OTPKeys.otp(email), hashedOtp, 600),
+    redisService.setCache(OTPKeys.resendAttempts(email), 1),
     sendEmailVerification(email, otp),
   ]);
 });
@@ -22,6 +23,17 @@ eventEmitter.on(UserEvents.forgetPassword, async (email: string) => {
   const hashedOTP = await hashValue(otp);
   Promise.all([
     redisService.setCache(OTPKeys.forgotPassword(email), hashedOTP, 600),
+    redisService.setCache(OTPKeys.resendAttempts(email), 1),
+    sendEmailVerification(email, otp),
+  ]);
+});
+
+eventEmitter.on(UserEvents.resendOTP, async (email: string) => {
+  const otp = generateOTP();
+  const hashedOTP = await hashValue(otp);
+  Promise.all([
+    redisService.setCache(OTPKeys.otp(email), hashedOTP, 600),
+    redisService.setCache(OTPKeys.cooldown(email), 1, 60),
     sendEmailVerification(email, otp),
   ]);
 });

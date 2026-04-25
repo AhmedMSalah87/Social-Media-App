@@ -19,5 +19,6 @@ authRouter.post("/google", authService.signWithGoogle);
 authRouter.post("/password/forgot", authService.forgetPassword);
 authRouter.post("/password/verify", authService.verifyForgotPassword);
 authRouter.patch("/password/reset", authService.resetPassword);
+authRouter.post("/resend-otp", authService.resendOTP);
 
 export default authRouter;

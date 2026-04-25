@@ -16,7 +16,7 @@ class RedisService {
     }
   }
 
-  async setCache(key: string, value: string, tllSeconds?: number) {
+  async setCache(key: string, value: string | number, tllSeconds?: number) {
     try {
       const val = typeof value === "object" ? JSON.stringify(value) : value;
       if (tllSeconds) {
@@ -50,7 +50,7 @@ class RedisService {
     }
   }
 
-  async deleteCache(key: string | string[]) {
+  async deleteCache(...key: string[]) {
     try {
       await this.redisClient.del(key);
     } catch (err) {
