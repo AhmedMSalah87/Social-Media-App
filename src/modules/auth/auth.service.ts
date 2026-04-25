@@ -95,8 +95,15 @@ class AuthService {
     // to fix undefined error from typescript
     const firstName = given_name || "";
     const lastName = family_name || "";
+    let isNewUser = false;
 
     let user = await this.userRepo.findByEmail(email);
+    if (user && user.provider == Provider.credentials) {
+      throw new AppError(
+        "email already exists. please login with credentials",
+        409,
+      );
+    }
     if (!user) {
       user = await this.userRepo.create({
         firstName,
@@ -106,13 +113,18 @@ class AuthService {
         googleId: sub,
         isVerified: email_verified,
       });
+      isNewUser = true;
     }
 
     const { accessToken, refreshToken } = TokenService.signToken(user);
 
-    res
-      .status(201)
-      .json({ message: "user signed successfully", accessToken, refreshToken });
+    res.status(isNewUser ? 201 : 200).json({
+      message: isNewUser
+        ? "user registered successfully"
+        : "user logged in successfully",
+      accessToken,
+      refreshToken,
+    });
   };
 
   forgetPassword = async (req: Request, res: Response, next: NextFunction) => {

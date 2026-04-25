@@ -8,11 +8,10 @@ import userRouter from "./modules/user/user.controller";
 
 const app: Application = express();
 
-const bootstrap = async () => {
+const bootstrap = () => {
   app.use(express.json());
 
-  await connectDB();
-  await redisService.connect();
+  Promise.all([connectDB(), redisService.connect()]);
 
   app.get("/", (req: Request, res: Response) => {
     res.status(200).json({ message: "welcome to social app" });
@@ -35,7 +34,7 @@ const bootstrap = async () => {
     });
   });
 
-  app.listen(5000, () => {
+  app.listen(3000, () => {
     console.log("server is running");
   });
 };

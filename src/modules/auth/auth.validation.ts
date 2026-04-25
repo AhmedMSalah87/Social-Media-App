@@ -2,7 +2,7 @@ import z from "zod";
 import { Gender } from "../../common/enum/user.enum";
 
 export const signupSchema = {
-  body: z.object({
+  body: z.strictObject({
     firstName: z.string().min(2).max(20),
     lastName: z.string().min(2).max(20),
     email: z.email(),
@@ -16,7 +16,7 @@ export const signinSchema = {
 };
 
 export const verifyEmailSchema = {
-  body: z.object({
+  body: z.strictObject({
     otp: z.string().length(6),
     email: z.email(),
   }),
