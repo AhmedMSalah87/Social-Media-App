@@ -18,3 +18,9 @@ export enum UserEvents {
   forgetPassword = "forgetPassword",
   resendOTP = "resendOTP",
 }
+
+export const FileType = {
+  image: ["image/jpeg", "image/png"],
+  video: ["video/mpeg"],
+  pdf: ["application/pdf"],
+};
