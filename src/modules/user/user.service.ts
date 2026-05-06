@@ -117,21 +117,20 @@ class UserService {
   };
 
   deleteFile = async (
-    req: Request<{ path: string[] }>,
+    req: Request<{ fileId: string }>,
     res: Response,
     next: NextFunction,
   ) => {
-    const { path } = req.params;
+    const { fileId } = req.params;
     const userId = req.user?._id;
-    const ownerId = new Types.ObjectId(path[1]);
-    console.log(ownerId, userId);
     if (!userId) {
       throw new AppError("unauthorized user", 401);
     }
-    if (!userId.equals(ownerId)) {
-      throw new AppError("unauthorized user", 401);
+    const file = await this.fileRepo.findOneAndDelete({ fileId, userId });
+    const key = file?.s3Key;
+    if (!key) {
+      throw new AppError("invalid file", 400);
     }
-    const key = path.join("/");
     const result = await this.s3Service.deleteFileFromS3(key);
     res.status(200).json(result);
   };

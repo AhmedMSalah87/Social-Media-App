@@ -75,6 +75,13 @@ abstract class BaseRepository<T> {
       })
       .exec();
   }
+
+  async findOneAndDelete(
+    filter: QueryFilter<T>,
+    options?: QueryOptions<T>,
+  ): Promise<HydratedDocument<T> | null> {
+    return this.model.findOneAndDelete(filter, options).exec();
+  }
 }
 
 export default BaseRepository;

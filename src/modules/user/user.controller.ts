@@ -25,6 +25,6 @@ userRouter.post(
   uploadCloud(FileType.image, false).single("attachment"),
   userService.upload,
 );
-userRouter.delete("/upload/*path", authenticate, userService.deleteFile);
+userRouter.delete("/upload/:fileId", authenticate, userService.deleteFile);
 
 export default userRouter;
