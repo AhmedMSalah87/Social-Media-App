@@ -2,9 +2,15 @@ import { NextFunction, Request, Response } from "express";
 import UserRepository from "../../database/repositories/user.repository";
 import { AppError } from "../../errors/error";
 import { S3Service } from "../../common/services/amazons3.service";
+import { fileDTO } from "./user.dto";
+import { randomUUID } from "node:crypto";
+import { pipeline } from "node:stream/promises";
+import { Types } from "mongoose";
+import { FileRepository } from "../../database/repositories/file.repository";
 
 class UserService {
   private readonly userRepo: UserRepository = new UserRepository();
+  private readonly fileRepo: FileRepository = new FileRepository();
   private readonly s3Service: S3Service = new S3Service();
   constructor() {}
 
@@ -24,8 +30,110 @@ class UserService {
     if (!req.user) {
       throw new AppError("unauthorized user", 401);
     }
-    await this.s3Service.uploadFile(req.file, "users", req.user?._id);
+    const userId = req.user._id;
+    const fileId = randomUUID();
+    const fileKey = `users/${userId}/${fileId}-${req.file.originalname}`;
+    await this.s3Service.uploadFile(req.file, fileKey);
+    await this.fileRepo.create({
+      userId,
+      fileId,
+      fileName: req.file.originalname,
+      s3Key: fileKey,
+    });
     res.status(201).json({ message: "file uploaded successfully" });
+  };
+
+  createPresignedUpload = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) => {
+    const { fileName, fileType }: fileDTO = req.body;
+    if (!req.user) {
+      throw new AppError("unauthorized user", 401);
+    }
+    const fileUniqueName = `${randomUUID()}-${fileName}`;
+    const path = `users/${req.user._id}/${fileUniqueName}`;
+    const url = await this.s3Service.generatePresignedURL(path, fileType);
+    res.status(201).json({ message: "url generted successfully", url });
+  };
+
+  getFile = async (
+    req: Request<{ fileId: string }, {}, {}, { download: string }>,
+    res: Response,
+    next: NextFunction,
+  ) => {
+    const { fileId } = req.params;
+    const { download } = req.query;
+    const userId = req.user?._id;
+    if (!userId) {
+      throw new AppError("unauthorized user", 401);
+    }
+    const fileData = await this.fileRepo.findOne({ fileId, userId });
+    const key = fileData?.s3Key;
+    if (!key) {
+      throw new AppError("invalid file", 404);
+    }
+    const result = await this.s3Service.getFileFromS3(key);
+    const stream = result.Body as ReadableStream;
+    if (download && download === "true") {
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename="${fileData?.fileName}"`,
+      );
+    }
+    await pipeline(stream, res);
+  };
+
+  getPresignedFile = async (
+    req: Request<{ fileId: string }, {}, {}, { download: string }>,
+    res: Response,
+    next: NextFunction,
+  ) => {
+    const { fileId } = req.params;
+    const { download } = req.query;
+    const userId = req.user?._id;
+    if (!userId) {
+      throw new AppError("unauthorized user", 401);
+    }
+    const fileData = await this.fileRepo.findOne({ fileId, userId });
+    const key = fileData?.s3Key;
+    if (!key) {
+      throw new AppError("invalid file", 404);
+    }
+    const url = await this.s3Service.getFileFromPresignedUrl(key, download);
+    res.status(200).json(url);
+  };
+
+  getFiles = async (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.user?._id;
+    if (!userId) {
+      throw new AppError("unauthorized user", 401);
+    }
+    const result = await this.s3Service.getFilesFromS3("users", userId);
+    const filesList = result.Contents?.map((item) => item.Key);
+
+    res.status(200).json(filesList);
+  };
+
+  deleteFile = async (
+    req: Request<{ path: string[] }>,
+    res: Response,
+    next: NextFunction,
+  ) => {
+    const { path } = req.params;
+    const userId = req.user?._id;
+    const ownerId = new Types.ObjectId(path[1]);
+    console.log(ownerId, userId);
+    if (!userId) {
+      throw new AppError("unauthorized user", 401);
+    }
+    if (!userId.equals(ownerId)) {
+      throw new AppError("unauthorized user", 401);
+    }
+    const key = path.join("/");
+    const result = await this.s3Service.deleteFileFromS3(key);
+    res.status(200).json(result);
   };
 }
 
