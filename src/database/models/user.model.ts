@@ -49,6 +49,10 @@ const userSchema = new Schema(
         this.provider === Provider.google;
       },
     },
+    isBlocked: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true },
 );

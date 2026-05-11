@@ -7,6 +7,7 @@ import {
   Types,
   UpdateQuery,
 } from "mongoose";
+import { PaginationOptions } from "../../types/pagination.type";
 
 // T represents type of module like user for example
 // use abstract to prevent creating instances from it
@@ -29,8 +30,15 @@ abstract class BaseRepository<T> {
     filter: QueryFilter<T>,
     projection?: ProjectionType<T>,
     options?: QueryOptions<T>,
+    pagination?: PaginationOptions,
   ): Promise<HydratedDocument<T>[]> {
-    return this.model.find(filter, projection, options).exec();
+    const page = pagination?.page ?? 1;
+    const limit = pagination?.limit ?? 10;
+    return this.model
+      .find(filter, projection, options)
+      .sort(pagination?.sort)
+      .skip((page - 1) * limit)
+      .limit(limit);
   }
 
   async findById(

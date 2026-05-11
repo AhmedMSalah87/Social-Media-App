@@ -32,14 +32,9 @@ class UserService {
     }
     const userId = req.user._id;
     const fileId = randomUUID();
-    const fileKey = `users/${userId}/${fileId}-${req.file.originalname}`;
+    const fileKey = `users/${userId}/${fileId}__${req.file.originalname}`;
     await this.s3Service.uploadFile(req.file, fileKey);
-    await this.fileRepo.create({
-      userId,
-      fileId,
-      fileName: req.file.originalname,
-      s3Key: fileKey,
-    });
+
     res.status(201).json({ message: "file uploaded successfully" });
   };
 

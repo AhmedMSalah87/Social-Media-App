@@ -5,10 +5,12 @@ import { AppError } from "./errors/error";
 import { connectDB } from "./database/connection";
 import redisService from "./common/services/redis.service";
 import userRouter from "./modules/user/user.controller";
+import postRouter from "./modules/post/post.controller";
 
 const app: Application = express();
 
 const bootstrap = () => {
+  // app.set("query parser", "extended"); //enable nested query parsing
   app.use(express.json());
 
   Promise.all([connectDB(), redisService.connect()]);
@@ -19,6 +21,7 @@ const bootstrap = () => {
 
   app.use("/auth", authRouter);
   app.use("/users", userRouter);
+  app.use("/posts", postRouter);
   app.use("{/*demo}", (req: Request, res: Response, next: NextFunction) => {
     throw new Error(`url with ${req.originalUrl} and ${req.method} not found`, {
       cause: 404,
