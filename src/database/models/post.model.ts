@@ -41,6 +41,7 @@ const postSchema = new Schema(
     },
     likesCount: {
       type: Number,
+      default: 0,
     },
   },
   {

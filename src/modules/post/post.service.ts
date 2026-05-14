@@ -6,10 +6,12 @@ import { Post } from "../../database/models/post.model";
 import userService from "../user/user.service";
 import { AllowComment, PostAvailability } from "../../common/enum/post.enum";
 import s3Service from "../../common/services/amazons3.service";
+import LikeRepository from "../../database/repositories/like.repository";
 
 class PostService {
   private readonly postRepo: PostRepository = new PostRepository();
   private readonly userRepo: UserRepository = new UserRepository();
+  private readonly likeRepo: LikeRepository = new LikeRepository();
   private readonly userServ = userService;
   private readonly s3Serv = s3Service;
   constructor() {}
@@ -77,8 +79,6 @@ class PostService {
     );
     return posts;
   };
-
-  likePost = async () => {};
 }
 
 export default new PostService();

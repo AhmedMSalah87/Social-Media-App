@@ -1,4 +1,4 @@
-import { HydratedDocument, Model } from "mongoose";
+import { Model } from "mongoose";
 import PostModel, { Post } from "../models/post.model";
 import BaseRepository from "./base.repository";
 

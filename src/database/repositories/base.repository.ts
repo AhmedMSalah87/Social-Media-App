@@ -6,6 +6,7 @@ import {
   QueryOptions,
   Types,
   UpdateQuery,
+  UpdateResult,
 } from "mongoose";
 import { PaginationOptions } from "../../types/pagination.type";
 
@@ -89,6 +90,16 @@ abstract class BaseRepository<T> {
     options?: QueryOptions<T>,
   ): Promise<HydratedDocument<T> | null> {
     return this.model.findOneAndDelete(filter, options).exec();
+  }
+
+  async updateOne(
+    filter: QueryFilter<T>,
+    update: UpdateQuery<T>,
+  ): Promise<UpdateResult> {
+    return this.model.updateOne(filter, update, {
+      upsert: true,
+      runValidators: true,
+    });
   }
 }
 

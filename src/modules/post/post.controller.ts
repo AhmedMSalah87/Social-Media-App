@@ -8,8 +8,11 @@ import { FileType } from "../../common/enum/user.enum";
 import { validate } from "../../middleware/validation";
 import { createPostSchema } from "./post.validation";
 import { Types } from "mongoose";
+import likeRouter from "../like/like.controller";
 
 const postRouter = Router();
+
+postRouter.use("/:postId/like", likeRouter);
 
 postRouter.post(
   "/",
