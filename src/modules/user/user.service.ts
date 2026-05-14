@@ -1,17 +1,17 @@
 import { NextFunction, Request, Response } from "express";
 import UserRepository from "../../database/repositories/user.repository";
 import { AppError } from "../../errors/error";
-import { S3Service } from "../../common/services/amazons3.service";
+import s3Service from "../../common/services/amazons3.service";
 import { fileDTO } from "./user.dto";
 import { randomUUID } from "node:crypto";
 import { pipeline } from "node:stream/promises";
-import { Types } from "mongoose";
 import { FileRepository } from "../../database/repositories/file.repository";
+import { Types } from "mongoose";
 
 class UserService {
   private readonly userRepo: UserRepository = new UserRepository();
   private readonly fileRepo: FileRepository = new FileRepository();
-  private readonly s3Service: S3Service = new S3Service();
+  private readonly s3Serv = s3Service;
   constructor() {}
 
   getProfile = async (req: Request, res: Response, next: NextFunction) => {
@@ -23,19 +23,11 @@ class UserService {
     res.status(200).json({ user: { firstName, lastName, email } });
   };
 
-  upload = async (req: Request, res: Response, next: NextFunction) => {
-    if (!req.file) {
-      throw new AppError("file is missing", 400);
-    }
-    if (!req.user) {
-      throw new AppError("unauthorized user", 401);
-    }
-    const userId = req.user._id;
+  upload = async (userId: Types.ObjectId, file: Express.Multer.File) => {
     const fileId = randomUUID();
-    const fileKey = `users/${userId}/${fileId}__${req.file.originalname}`;
-    await this.s3Service.uploadFile(req.file, fileKey);
-
-    res.status(201).json({ message: "file uploaded successfully" });
+    const fileKey = `users/${userId}/posts/${fileId}__${file.originalname}`;
+    await this.s3Serv.uploadFile(file, fileKey);
+    return fileKey;
   };
 
   createPresignedUpload = async (
@@ -49,7 +41,7 @@ class UserService {
     }
     const fileUniqueName = `${randomUUID()}-${fileName}`;
     const path = `users/${req.user._id}/${fileUniqueName}`;
-    const url = await this.s3Service.generatePresignedURL(path, fileType);
+    const url = await this.s3Serv.generatePresignedURL(path, fileType);
     res.status(201).json({ message: "url generted successfully", url });
   };
 
@@ -69,7 +61,7 @@ class UserService {
     if (!key) {
       throw new AppError("invalid file", 404);
     }
-    const result = await this.s3Service.getFileFromS3(key);
+    const result = await this.s3Serv.getFileFromS3(key);
     const stream = result.Body as ReadableStream;
     if (download && download === "true") {
       res.setHeader(
@@ -96,7 +88,7 @@ class UserService {
     if (!key) {
       throw new AppError("invalid file", 404);
     }
-    const url = await this.s3Service.getFileFromPresignedUrl(key, download);
+    const url = await this.s3Serv.getFileFromPresignedUrl(key, download);
     res.status(200).json(url);
   };
 
@@ -105,7 +97,7 @@ class UserService {
     if (!userId) {
       throw new AppError("unauthorized user", 401);
     }
-    const result = await this.s3Service.getFilesFromS3("users", userId);
+    const result = await this.s3Serv.getFilesFromS3("users", userId);
     const filesList = result.Contents?.map((item) => item.Key);
 
     res.status(200).json(filesList);
@@ -126,7 +118,7 @@ class UserService {
     if (!key) {
       throw new AppError("invalid file", 400);
     }
-    const result = await this.s3Service.deleteFileFromS3(key);
+    const result = await this.s3Serv.deleteFileFromS3(key);
     res.status(200).json(result);
   };
 }

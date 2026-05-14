@@ -1,10 +1,5 @@
-import mongoose, {
-  InferSchemaType,
-  Schema,
-  Types,
-  model,
-  models,
-} from "mongoose";
+import { InferSchemaType, Schema, Types, model, models } from "mongoose";
+import { AllowComment, PostAvailability } from "../../common/enum/post.enum";
 
 const postSchema = new Schema(
   {
@@ -15,9 +10,37 @@ const postSchema = new Schema(
     },
     content: {
       type: String,
-      required: true,
+      required: function (this) {
+        return !this.images;
+      },
       minLength: 1,
       maxLength: 5000,
+    },
+    mediaFiles: [String],
+    tags: [
+      {
+        type: Types.ObjectId,
+        ref: "User",
+      },
+    ],
+    likes: [
+      {
+        type: Types.ObjectId,
+        ref: "User",
+      },
+    ],
+    allowComment: {
+      type: String,
+      enum: AllowComment,
+      default: AllowComment.allow,
+    },
+    availability: {
+      type: String,
+      enum: PostAvailability,
+      default: PostAvailability.public,
+    },
+    likesCount: {
+      type: Number,
     },
   },
   {

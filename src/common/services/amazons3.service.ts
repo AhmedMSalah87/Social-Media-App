@@ -1,6 +1,8 @@
 import {
   DeleteObjectCommand,
   DeleteObjectCommandOutput,
+  DeleteObjectsCommand,
+  DeleteObjectsCommandOutput,
   GetObjectCommand,
   GetObjectCommandOutput,
   ListObjectsV2Command,
@@ -13,7 +15,7 @@ import { Progress, Upload } from "@aws-sdk/lib-storage";
 import { Types } from "mongoose";
 import fs from "node:fs";
 
-export class S3Service {
+class S3Service {
   private readonly client: S3Client;
   constructor() {
     this.client = new S3Client({
@@ -117,4 +119,20 @@ export class S3Service {
 
     return await this.client.send(command);
   };
+
+  deleteFilesFromS3 = async (
+    paths: string[],
+  ): Promise<DeleteObjectsCommandOutput> => {
+    const mappedKeys = paths.map((path) => {
+      return { Key: path };
+    });
+    const command = new DeleteObjectsCommand({
+      Bucket: process.env.AWS_BUCKET_NAME!,
+      Delete: { Objects: mappedKeys },
+    });
+
+    return await this.client.send(command);
+  };
 }
+
+export default new S3Service();
