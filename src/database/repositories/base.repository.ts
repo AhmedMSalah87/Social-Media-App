@@ -97,7 +97,6 @@ abstract class BaseRepository<T> {
     update: UpdateQuery<T>,
   ): Promise<UpdateResult> {
     return this.model.updateOne(filter, update, {
-      upsert: true,
       runValidators: true,
     });
   }

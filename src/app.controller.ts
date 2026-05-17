@@ -6,6 +6,7 @@ import { connectDB } from "./database/connection";
 import redisService from "./common/services/redis.service";
 import userRouter from "./modules/user/user.controller";
 import postRouter from "./modules/post/post.controller";
+import fileRouter from "./modules/file/file.controller";
 
 const app: Application = express();
 
@@ -21,6 +22,7 @@ const bootstrap = () => {
 
   app.use("/auth", authRouter);
   app.use("/users", userRouter);
+  app.use("/upload", fileRouter);
   app.use("/posts", postRouter);
   app.use("{/*demo}", (req: Request, res: Response, next: NextFunction) => {
     throw new Error(`url with ${req.originalUrl} and ${req.method} not found`, {
