@@ -35,11 +35,11 @@ postRouter.post(
     }
     await postService.createPost(
       userId,
+      allowComment,
+      availability,
       content,
       req.file,
       tagsObjectIds,
-      allowComment,
-      availability,
     );
 
     res.status(201).json({ message: "post created successfully" });

@@ -3,30 +3,28 @@ import { PostRepository } from "../../database/repositories/post.repository";
 import UserRepository from "../../database/repositories/user.repository";
 import { AppError } from "../../errors/error";
 import { Post } from "../../database/models/post.model";
-import userService from "../user/user.service";
 import { AllowComment, PostAvailability } from "../../common/enum/post.enum";
 import s3Service from "../../common/services/amazons3.service";
-import LikeRepository from "../../database/repositories/like.repository";
+import fileService from "../file/file.service";
 
 class PostService {
   private readonly postRepo: PostRepository = new PostRepository();
   private readonly userRepo: UserRepository = new UserRepository();
-  private readonly likeRepo: LikeRepository = new LikeRepository();
-  private readonly userServ = userService;
+  private readonly fileServ = fileService;
   private readonly s3Serv = s3Service;
   constructor() {}
 
   createPost = async (
     userId: Types.ObjectId,
+    allowComment: AllowComment, //parameter for enum value must be type of enum not string
+    availability: PostAvailability,
     content?: string,
     file?: Express.Multer.File,
     tags?: Types.ObjectId[],
-    allowComment?: AllowComment, //parameter for enum value must be type of enum not string
-    availability?: PostAvailability,
   ) => {
     const user = await this.userRepo.findById(userId);
     if (user?.isBlocked) {
-      throw new AppError("user is blocked and cant create posts", 401);
+      throw new AppError("user is blocked and cant create posts", 403);
     }
     const mentionTags: Types.ObjectId[] = [];
     if (tags?.length) {
@@ -40,20 +38,20 @@ class PostService {
     }
     const keys: string[] = [];
     if (file) {
-      const fileKey = await this.userServ.upload(userId, file);
+      const fileKey = await this.fileServ.upload(userId, file);
       keys.push(fileKey);
     }
     const post = await this.postRepo.create({
       authorId: userId,
       content: content ?? "",
       mediaFiles: file ? keys : [],
-      allowComment: allowComment ?? AllowComment.allow,
-      availability: availability ?? PostAvailability.public,
+      allowComment: allowComment,
+      availability: availability,
       tags: mentionTags ?? [],
     });
 
     if (!post) {
-      await this.s3Serv.deleteFilesFromS3(keys);
+      await this.s3Serv.deleteFilesFromS3(keys); // need to change to file service in future
       throw new AppError("failed to create post", 500);
     }
     return post;

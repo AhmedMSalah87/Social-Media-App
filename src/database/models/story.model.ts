@@ -32,6 +32,8 @@ const storySchema = new Schema(
   },
 );
 
+storySchema.index({ expiredAt: 1 }, { expireAfterSeconds: 0 });
+
 export type Story = InferSchemaType<typeof storySchema>;
 
 const StoryModel = models.Story || model<Story>("Story", storySchema);
