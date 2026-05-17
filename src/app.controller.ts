@@ -7,6 +7,7 @@ import redisService from "./common/services/redis.service";
 import userRouter from "./modules/user/user.controller";
 import postRouter from "./modules/post/post.controller";
 import fileRouter from "./modules/file/file.controller";
+import storyRouter from "./modules/story/story.controller";
 
 const app: Application = express();
 
@@ -24,6 +25,7 @@ const bootstrap = () => {
   app.use("/users", userRouter);
   app.use("/upload", fileRouter);
   app.use("/posts", postRouter);
+  app.use("/stories", storyRouter);
   app.use("{/*demo}", (req: Request, res: Response, next: NextFunction) => {
     throw new Error(`url with ${req.originalUrl} and ${req.method} not found`, {
       cause: 404,

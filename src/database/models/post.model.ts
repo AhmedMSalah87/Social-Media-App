@@ -11,7 +11,7 @@ const postSchema = new Schema(
     content: {
       type: String,
       required: function (this) {
-        return !this.images;
+        return !this.mediaFiles;
       },
       minLength: 1,
       maxLength: 5000,
